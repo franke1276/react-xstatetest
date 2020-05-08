@@ -6,6 +6,11 @@
       "dom.iterable",
       "esnext"
     ],
+    "types": [
+      "puppeteer",
+      "jest-environment-puppeteer",
+      "expect-puppeteer",
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
