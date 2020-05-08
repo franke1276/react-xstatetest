@@ -1,4 +1,4 @@
-import { Machine } from 'xstate'
+import { Machine, assign } from 'xstate'
 import  { createModel } from  '@xstate/test'
 import { Page } from 'puppeteer';
 
@@ -6,11 +6,20 @@ describe('counter app', () => {
   const feedbackMachine = Machine({
     id: 'toggle',
     initial: 'Init',
+    context: {
+      count: 0
+    },
     states: {
       Init: {
         on: {
-          COUNT: 'Count_1',
-          RESET: 'Init',
+          COUNT: {
+            target: 'Count',
+            actions: ['inc']
+          },
+          RESET: {
+            target: 'Init',
+            actions: ['reset']
+          }
         },
         meta: {
           test: async (page: Page) => {
@@ -21,37 +30,35 @@ describe('counter app', () => {
           }
         }
       },
-      Count_1: {
+      Count: {
         on: {
-          COUNT: 'Count_2',
-          RESET: 'Init',
+          COUNT: {
+            target: 'Count',
+            actions: ['inc']
+          },
+          RESET: {
+            target: 'Init',
+            actions: ['reset']
+          }
         },
         meta: {
-          test: async (page: Page) => {
+          test: async (page: Page, state:any) => {
             await page.waitFor('[data-testid="counter-screen"]');
             const counterEl = await page.$('[data-testid="value-counter"]');
-            const counter: number = await page.evaluate(el => el.textContent, counterEl)
-            expect(counter).toBe("1")
+            const cc: number = await page.evaluate(el => el.textContent, counterEl)
+            
+            expect(cc).toBe(state.context.count.toString())
           }
         }
       },
-
-    Count_2: {
-      on: {
-        RESET: 'Init',
-      },
-      meta: {
-        test: async (page: Page) => {
-          const counterEl = await page.$('[data-testid="value-counter"]');
-            const counter: number = await page.evaluate(el => el.textContent, counterEl)
-            expect(counter).toBe("2")
-        }
-      }
-    },
     
   }
 
-  });
+  }, {
+    actions: {
+    inc: assign<{count: number}>({count: (ctx, e)=> ctx.count + 1}),
+    reset: assign<{count: number}>({count: (ctx, e)=> 0})
+  }});
 
   const testModel = createModel(feedbackMachine, {
     events: {
@@ -64,8 +71,9 @@ describe('counter app', () => {
     }
   });
 
-  const testPlans = testModel.getSimplePathPlans();
-  console.log(testPlans)
+  const testPlans = testModel.getShortestPathPlans({
+    filter: state => state.context.count < 5
+  });
   testPlans.forEach((plan, i) => {
     describe(plan.description, () => {
       plan.paths.forEach((path, i) => {
