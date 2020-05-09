@@ -1,15 +1,7 @@
 import React from 'react';
 import './App.css';
-import { createMachine, assign } from 'xstate';
-import { useMachine } from '@xstate/react';
-import styled from 'styled-components';
+// import styled from 'styled-components';
 import { HeadlessCounter } from './HeadlessCounter';
-
-const Wrapper = styled.div`
-  background: yellow;
-  color: black;
-  padding: 10px;
-`;
 
 
 

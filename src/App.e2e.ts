@@ -27,15 +27,23 @@ describe('counter app', () => {
             const counterEl = await page.$('[data-testid="value-counter"]');
             const counter: string = await page.evaluate(el => el.textContent, counterEl)
             expect(counter).toBe("0")
+            const isDisabled = await page.$eval('button[data-testid="button-reset"]', (b: any)=> b.disabled);
+
+            expect(isDisabled).toBeTruthy
           }
         }
       },
       Count: {
         on: {
-          COUNT: {
+          COUNT: [{
+            target: 'Max',
+            cond: 'isMax',
+            actions: ['inc']
+          },{
             target: 'Count',
             actions: ['inc']
           },
+          ],
           RESET: {
             target: 'Init',
             actions: ['reset']
@@ -51,10 +59,28 @@ describe('counter app', () => {
           }
         }
       },
+      Max: {
+        meta: {
+          test: async (page: Page, state:any) => {
+            await page.waitFor('[data-testid="counter-screen"]');
+            const counterEl = await page.$('[data-testid="value-counter"]');
+            const cc: number = await page.evaluate(el => el.textContent, counterEl)
+            
+            const isDisabled = await page.$eval('button[data-testid="button-count"]', (b: any)=> b.disabled);
+
+            expect(isDisabled).toBeTruthy
+            expect(cc).toBe("4")
+          }
+        }
+      }
     
   }
 
   }, {
+    guards:{
+      isMax: (ctx)=> ctx.count >=3
+    },
+
     actions: {
     inc: assign<{count: number}>({count: (ctx, e)=> ctx.count + 1}),
     reset: assign<{count: number}>({count: (ctx, e)=> 0})
@@ -72,7 +98,7 @@ describe('counter app', () => {
   });
 
   const testPlans = testModel.getShortestPathPlans({
-    filter: state => state.context.count < 5
+    filter: state => state.context.count <= 7
   });
   testPlans.forEach((plan, i) => {
     describe(plan.description, () => {

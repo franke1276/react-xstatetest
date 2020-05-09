@@ -34,11 +34,12 @@ export const machine = createMachine<DnDContext, DnDEvents, DnDState>({
         on: {
           'COUNT': {
             target: 'Counting',
+            actions: 'count'
           }
         }
       },
       Counting:{
-        entry: 'count',
+        
         on: {
   
           'RESET': {
@@ -48,10 +49,11 @@ export const machine = createMachine<DnDContext, DnDEvents, DnDState>({
           'COUNT': [{
             target: 'Max',
             cond: 'isMax',
+            actions: 'count'
           },
           {
             target: 'Counting',
-            internal: false
+            actions: 'count'
           }
         ]
         } 
@@ -74,7 +76,7 @@ export const machine = createMachine<DnDContext, DnDEvents, DnDState>({
 
   const machineOptions = {
     guards: {
-      isMax: (ctx: DnDContext)=> ctx.counter > 5
+      isMax: (ctx: DnDContext)=> ctx.counter >= 3
     },
     actions: {
       count: assign<DnDContext>({counter: (ctx) => ctx.counter + 1}),
@@ -101,7 +103,7 @@ export const HeadlessCounter =  (p: Props) => {
         devTools: true
     })
 
-    const {children,...counterProps} = p
+    const {children} = p
     return children({
         state: state, 
         count(){send({type : 'COUNT', value: "Click"})}, 
